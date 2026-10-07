@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+}
+model Monitor {
+  id                String   @id @default(uuid())
+  name              String
+  url               String
+  intervalSeconds   Int      @default(300)
+  timeoutMs         Int      @default(10000)
+  slowThresholdMs   Int      @default(2000)
+  notificationEmail String?
+  paused            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  targetChangedAt   DateTime @default(now())
+  nextCheckAt       DateTime @default(now())
+  consecutiveFails  Int      @default(0)
+  firstFailureAt    DateTime?
+  lastCheckAt       DateTime?
+  lastManualAt      DateTime?
+  leaseToken        String?
+  leaseUntil        DateTime?
+  checks            Check[]
+  incidents         Incident[]
+  requests          CheckRequest[]
+  gaps              ObservationGap[]
+}
+model Check {
+  id             String   @id @default(uuid())
+  monitorId      String
+  monitor        Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  checkedAt      DateTime @default(now())
+  source         String
+  success        Boolean
+  httpStatus     Int?
+  responseTimeMs Int?
+  elapsedMs      Int
+  errorCategory  String?
+  errorMessage   String?
+  @@index([monitorId, checkedAt])
+  @@index([checkedAt])
+}
+model Incident {
+  id              String   @id @default(uuid())
+  monitorId       String
+  monitor         Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  firstFailureAt  DateTime
+  confirmedAt     DateTime
+  recoveredAt     DateTime?
+  errorCategory   String?
+  notifications   Notification[]
+  @@index([monitorId, confirmedAt])
+}
+model CheckRequest {
+  id          String   @id @default(uuid())
+  monitorId   String
+  monitor     Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  claimedAt   DateTime?
+  completedAt DateTime?
+  @@index([completedAt, createdAt])
+}
+model Notification {
+  id          String   @id @default(uuid())
+  incidentId  String
+  incident    Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  kind        String
+  recipient   String
+  subject     String
+  body        String
+  attempts    Int      @default(0)
+  nextTryAt   DateTime @default(now())
+  sentAt      DateTime?
+  abandonedAt DateTime?
+  lastError   String?
+  @@unique([incidentId, kind])
+  @@index([sentAt, abandonedAt, nextTryAt])
+}
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  csrfToken String
+  username  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+model WorkerHeartbeat {
+  id         String   @id
+  lastSeenAt DateTime
+  startedAt  DateTime
+}
+model ObservationGap {
+  id        String   @id @default(uuid())
+  monitorId String
+  monitor   Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  startedAt DateTime
+  endedAt   DateTime
+  @@index([monitorId, startedAt])
+}

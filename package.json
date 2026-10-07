@@ -1,0 +1,50 @@
+{
+  "name": "site-watch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted HTTP monitoring for people managing multiple domains.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0 <23",
+    "npm": ">=11.6.0"
+  },
+  "packageManager": "npm@11.6.0",
+  "workspaces": [
+    "apps/server",
+    "apps/web"
+  ],
+  "overrides": {
+    "deepmerge-ts": "8.0.0",
+    "mysql2": "3.24.5",
+    "shell-quote": "1.11.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web,worker \"npm run dev -w apps/server\" \"npm run dev -w apps/web\" \"npm run worker:dev -w apps/server\"",
+    "build": "npm run build -w apps/web && npm run build -w apps/server",
+    "start": "npm run start -w apps/server",
+    "worker": "npm run worker -w apps/server",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "vitest run",
+    "test:db": "node scripts/db-tests.mjs",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "db:generate": "npm run db:generate -w apps/server",
+    "db:migrate": "npm run db:migrate -w apps/server",
+    "setup": "node scripts/setup.mjs",
+    "publish:github": "node scripts/publish-github.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.18.0",
+    "concurrently": "^9.2.1",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "^16.5.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^4.0.0"
+  }
+}

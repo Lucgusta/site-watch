@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+test-results/
+playwright-report/
+.runtime/
+.DS_Store
+Thumbs.db
+apps/server/src/generated/
+*.zip
+*.tar.gz
